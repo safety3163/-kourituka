@@ -201,10 +201,18 @@
     document.getElementById("camera-switch").addEventListener("click", switchCamera);
   }
 
+  function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async function startStream(constraints) {
     if (cameraStream) {
       cameraStream.getTracks().forEach(t => t.stop());
       cameraStream = null;
+      // give the OS/driver a moment to fully release the camera before
+      // requesting a different one — some Windows camera drivers fail
+      // to open a second device if asked immediately after stop()
+      await wait(350);
     }
     cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
     const video = document.getElementById("camera-video");
@@ -273,6 +281,7 @@
     const track = cameraStream ? cameraStream.getVideoTracks()[0] : null;
     const currentFacing = track ? track.getSettings().facingMode : undefined;
 
+    let lastError = null;
     for (let attempt = 1; attempt <= cameraDevices.length; attempt++) {
       const tryIndex = (startIndex + attempt) % cameraDevices.length;
       const nextId = cameraDevices[tryIndex].deviceId;
@@ -289,6 +298,19 @@
         }
       } catch (e) {
         console.error(e);
+        lastError = e;
+      }
+    }
+    if (lastError) {
+      const info = document.getElementById("camera-device-info");
+      info.textContent = `切替エラー: ${lastError.name || "unknown"} ${lastError.message || ""}`;
+      showToast("カメラを切り替えられませんでした");
+      // the stream may have been left stopped by the failed attempt — restore
+      // whichever camera was active before switching
+      try {
+        await startStream({ video: { deviceId: { exact: cameraDevices[startIndex].deviceId } }, audio: false });
+      } catch (e2) {
+        console.error(e2);
       }
     }
   }
