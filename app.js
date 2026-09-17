@@ -183,6 +183,71 @@
     });
   }
 
+  // ---------- in-app camera capture (for Windows PC/tablets where the file
+  // picker has no camera shortcut) ----------
+  let cameraStream = null;
+
+  function initCameraCapture() {
+    const btn = document.getElementById("btn-camera-capture");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      btn.hidden = true;
+      return;
+    }
+    btn.addEventListener("click", openCameraModal);
+    document.getElementById("camera-modal-close").addEventListener("click", closeCameraModal);
+    document.getElementById("camera-shutter").addEventListener("click", capturePhotoFromCamera);
+  }
+
+  async function openCameraModal() {
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    } catch (e) {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      } catch (e2) {
+        console.error(e2);
+        showToast("カメラを起動できませんでした。カメラの使用を許可してください。");
+        return;
+      }
+    }
+    const video = document.getElementById("camera-video");
+    video.srcObject = cameraStream;
+    document.getElementById("camera-modal").hidden = false;
+  }
+
+  function closeCameraModal() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+    }
+    document.getElementById("camera-modal").hidden = true;
+  }
+
+  function capturePhotoFromCamera() {
+    const video = document.getElementById("camera-video");
+    const canvas = document.getElementById("camera-canvas");
+    const maxDim = 1600;
+    let w = video.videoWidth;
+    let h = video.videoHeight;
+    if (!w || !h) {
+      showToast("カメラの映像を取得できませんでした");
+      return;
+    }
+    if (w > maxDim || h > maxDim) {
+      const scale = maxDim / Math.max(w, h);
+      w = Math.round(w * scale);
+      h = Math.round(h * scale);
+    }
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext("2d").drawImage(video, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+    currentPhotos.push({ id: uid(), dataUrl, caption: "" });
+    renderPhotoGrid();
+    closeCameraModal();
+    showToast("写真を追加しました");
+  }
+
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
@@ -543,6 +608,7 @@
     initOtherToggles();
     initPhotoInput();
     initPhotoModal();
+    initCameraCapture();
     initForm();
     initListToolbar();
     renderList();

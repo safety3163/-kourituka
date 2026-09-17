@@ -132,8 +132,9 @@
             写真を撮る・追加する
             <input type="file" id="photo-input" accept="image/*" capture="environment" multiple hidden>
           </label>
+          <button type="button" id="btn-camera-capture" class="btn btn-secondary">アプリ内カメラで撮影</button>
         </div>
-        <p class="photo-hint">※ Windows PC・タブレットの場合、この画面ではカメラは自動で起動せず、ファイル選択画面が開きます。一覧から「カメラ」を選ぶとその場で撮影できます（iPhone・iPad・Androidではタップするとカメラが直接起動します）。</p>
+        <p class="photo-hint">※ iPhone・iPad・Androidは「写真を撮る・追加する」でカメラが直接起動します。Windows PC・タブレットでカメラが起動しない場合は「アプリ内カメラで撮影」をお使いください。</p>
         <div class="photo-grid" id="photo-grid"></div>
       </div>
 
@@ -166,6 +167,18 @@
     <div class="modal-actions">
       <button id="photo-delete" class="btn btn-danger">この写真を削除</button>
       <button id="photo-modal-done" class="btn btn-primary">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- アプリ内カメラ撮影モーダル -->
+<div id="camera-modal" class="modal" hidden>
+  <div class="modal-content camera-modal-content">
+    <button class="modal-close" id="camera-modal-close">&times;</button>
+    <video id="camera-video" autoplay playsinline muted></video>
+    <canvas id="camera-canvas" hidden></canvas>
+    <div class="modal-actions">
+      <button id="camera-shutter" class="btn btn-primary">撮影する</button>
     </div>
   </div>
 </div>

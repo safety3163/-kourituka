@@ -333,6 +333,15 @@ textarea { resize: vertical; }
   cursor: pointer;
   color: var(--color-text-light);
 }
+
+.camera-modal-content video {
+  width: 100%;
+  max-height: 60vh;
+  border-radius: 8px;
+  background: #000;
+  display: block;
+  margin-bottom: 12px;
+}
 .modal-actions {
   display: flex;
   gap: 10px;
