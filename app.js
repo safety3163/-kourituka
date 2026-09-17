@@ -207,7 +207,13 @@
       cameraStream = null;
     }
     cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-    document.getElementById("camera-video").srcObject = cameraStream;
+    const video = document.getElementById("camera-video");
+    video.srcObject = cameraStream;
+    try {
+      await video.play();
+    } catch (e) {
+      // some browsers reject play() if it's immediately superseded; harmless
+    }
   }
 
   async function openCameraModal() {
@@ -227,7 +233,7 @@
       }
     }
     document.getElementById("camera-modal").hidden = false;
-    refreshCameraDeviceList();
+    await refreshCameraDeviceList();
   }
 
   async function refreshCameraDeviceList() {
@@ -247,14 +253,31 @@
   }
 
   async function switchCamera() {
-    if (cameraDevices.length < 2) return;
-    cameraDeviceIndex = (cameraDeviceIndex + 1) % cameraDevices.length;
-    const nextId = cameraDevices[cameraDeviceIndex].deviceId;
-    try {
-      await startStream({ video: { deviceId: { exact: nextId } }, audio: false });
-    } catch (e) {
-      console.error(e);
-      showToast("カメラを切り替えられませんでした");
+    await refreshCameraDeviceList();
+    if (cameraDevices.length < 2) {
+      showToast("切り替え可能なカメラが見つかりませんでした");
+      return;
+    }
+    const startIndex = cameraDeviceIndex;
+    const track = cameraStream ? cameraStream.getVideoTracks()[0] : null;
+    const currentFacing = track ? track.getSettings().facingMode : undefined;
+
+    for (let attempt = 1; attempt <= cameraDevices.length; attempt++) {
+      const tryIndex = (startIndex + attempt) % cameraDevices.length;
+      const nextId = cameraDevices[tryIndex].deviceId;
+      try {
+        await startStream({ video: { deviceId: { exact: nextId } }, audio: false });
+        cameraDeviceIndex = tryIndex;
+        const newTrack = cameraStream.getVideoTracks()[0];
+        const newFacing = newTrack.getSettings().facingMode;
+        // if facingMode is reported and unchanged, this was likely the same
+        // physical camera under another id — keep trying the next one
+        if (!currentFacing || !newFacing || newFacing !== currentFacing || cameraDevices.length === 2) {
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 
