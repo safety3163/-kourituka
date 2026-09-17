@@ -1,0 +1,9 @@
+exports/
+server.ps1
+.claude/
+icons/make-icons.ps1
+icons/make-preview.ps1
+icons/size-preview.png
+icons/icon-source.svg
+icons/icon-tile.png
+icons/desktop-screenshot.png

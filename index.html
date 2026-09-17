@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>東北機材センター 業務効率化提案</title>
+<link rel="stylesheet" href="style.css">
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<meta name="theme-color" content="#1a5f7a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="効率化">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>東北機材センター 業務効率化提案</h1>
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="form">入力</button>
+    <button class="tab-btn" data-view="list">提出済み一覧</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ===================== 入力フォーム ===================== -->
+  <section id="view-form" class="view active">
+    <form id="proposal-form" autocomplete="off">
+      <input type="hidden" id="entry-id">
+
+      <div class="card">
+        <div class="fixed-field">
+          <span class="fixed-label">拠点</span>
+          <span class="fixed-value">東北機材センター</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field field-term">
+            <label for="term">期</label>
+            <select id="term" required>
+              <option value="39">39期</option>
+              <option value="40">40期</option>
+              <option value="41" selected>41期</option>
+              <option value="42">42期</option>
+              <option value="43">43期</option>
+              <option value="44">44期</option>
+              <option value="45">45期</option>
+              <option value="46">46期</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="month">対象月</label>
+            <select id="month" required>
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="group">報告グループ</label>
+            <select id="group" required>
+              <option value="">選択してください</option>
+              <option value="平間・弦">平間・弦</option>
+              <option value="草刈・涼晴">草刈・涼晴</option>
+              <option value="丹野・岡崎">丹野・岡崎</option>
+              <option value="石倉・東・小野寺">石倉・東・小野寺</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="deadline-note">提出期限：毎月20日(土日の場合は前倒しの金曜日)</p>
+      </div>
+
+      <div class="card">
+        <h2>【提案該当項目】<span class="hint">※該当する項目にレ点チェック</span></h2>
+        <div class="check-grid" id="applicable-items">
+          <label class="check-item"><input type="checkbox" name="applicableItems" value="出庫作業"><span>出庫作業</span></label>
+          <label class="check-item"><input type="checkbox" name="applicableItems" value="検収作業"><span>検収作業</span></label>
+          <label class="check-item"><input type="checkbox" name="applicableItems" value="整備作業"><span>整備作業</span></label>
+          <label class="check-item"><input type="checkbox" name="applicableItems" value="修理作業"><span>修理作業</span></label>
+          <label class="check-item other-check"><input type="checkbox" name="applicableItems" value="その他" data-other-target="applicableItemsOther"><span>その他</span></label>
+        </div>
+        <div class="field other-field" id="applicableItemsOtherWrap" hidden>
+          <label for="applicableItemsOther">その他（自由入力）</label>
+          <input type="text" id="applicableItemsOther" placeholder="内容を入力してください">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>【提案該当効果】<span class="hint">※該当する項目にレ点チェック</span></h2>
+        <div class="check-grid" id="applicable-effects">
+          <label class="check-item"><input type="checkbox" name="applicableEffects" value="工程改善"><span>工程改善</span></label>
+          <label class="check-item"><input type="checkbox" name="applicableEffects" value="工数削減"><span>工数削減</span></label>
+          <label class="check-item other-check"><input type="checkbox" name="applicableEffects" value="その他" data-other-target="applicableEffectsOther"><span>その他</span></label>
+        </div>
+        <div class="field other-field" id="applicableEffectsOtherWrap" hidden>
+          <label for="applicableEffectsOther">その他（自由入力）</label>
+          <input type="text" id="applicableEffectsOther" placeholder="内容を入力してください">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>現状</h2>
+        <div class="field">
+          <label for="currentState">現状について</label>
+          <textarea id="currentState" rows="3" placeholder="現在の作業内容・状況を入力してください"></textarea>
+        </div>
+        <div class="field">
+          <label for="currentIssue">現状の課題</label>
+          <textarea id="currentIssue" rows="3" placeholder="ムダ・ムラ・ムリなど課題を入力してください"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>提案内容</h2>
+        <div class="field">
+          <label for="improvementContent">改善の内容</label>
+          <textarea id="improvementContent" rows="3" placeholder="簡単な箇条書きでも可"></textarea>
+        </div>
+        <div class="field">
+          <label for="improvementEffect">改善の効果</label>
+          <textarea id="improvementEffect" rows="3" placeholder="改善によって得られる効果を入力してください"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>写真</h2>
+        <div class="photo-actions">
+          <label class="btn btn-primary photo-add-btn">
+            写真を撮る・追加する
+            <input type="file" id="photo-input" accept="image/*" capture="environment" multiple hidden>
+          </label>
+        </div>
+        <div class="photo-grid" id="photo-grid"></div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" id="btn-clear" class="btn btn-ghost">クリア</button>
+        <button type="submit" id="btn-save" class="btn btn-primary">保存する</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===================== 提出済み一覧 ===================== -->
+  <section id="view-list" class="view">
+    <div class="list-toolbar">
+      <button id="btn-export-all" class="btn btn-secondary">全件をExcel出力</button>
+    </div>
+    <div id="entry-list" class="entry-list"></div>
+    <p id="empty-msg" class="empty-msg" hidden>提出済みの内容はまだありません。</p>
+  </section>
+</main>
+
+<!-- 写真プレビュー・編集モーダル -->
+<div id="photo-modal" class="modal" hidden>
+  <div class="modal-content">
+    <button class="modal-close" id="photo-modal-close">&times;</button>
+    <img id="photo-modal-img" src="" alt="写真プレビュー">
+    <div class="field">
+      <label for="photo-caption">写真の説明（文言）</label>
+      <input type="text" id="photo-caption" placeholder="写真の説明を入力できます">
+    </div>
+    <div class="modal-actions">
+      <button id="photo-delete" class="btn btn-danger">この写真を削除</button>
+      <button id="photo-modal-done" class="btn btn-primary">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 印刷用テンプレート（印刷時のみ表示） -->
+<div id="print-area" class="print-only"></div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="lib/exceljs.min.js"></script>
+<script src="lib/FileSaver.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
