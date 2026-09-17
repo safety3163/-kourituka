@@ -25,7 +25,7 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
     } catch (e) {
       console.error("保存に失敗しました", e);
-      showToast("保存に失敗しました（容量オーバーの可能性があります）");
+      showToast("提出に失敗しました（容量オーバーの可能性があります）");
     }
   }
 
@@ -262,7 +262,7 @@
       if (idx >= 0) entries[idx] = data;
       else entries.push(data);
       saveEntries();
-      showToast("保存しました");
+      showToast("提出しました");
       resetForm();
       switchView("list");
     });
@@ -377,7 +377,16 @@
 
     for (const entry of list) {
       const sheetName = `${entry.month}月_${entry.group}`.slice(0, 31).replace(/[\\/*?:[\]]/g, "_");
-      const ws = wb.addWorksheet(sheetName || "提案", { pageSetup: { paperSize: 9, orientation: "portrait" } });
+      const ws = wb.addWorksheet(sheetName || "提案", {
+        pageSetup: {
+          paperSize: 9,
+          orientation: "portrait",
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 1,
+          margins: { left: 0.3, right: 0.3, top: 0.3, bottom: 0.3, header: 0, footer: 0 },
+        },
+      });
       buildSheetForEntry(ws, entry);
     }
 
@@ -509,7 +518,7 @@
     labelCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEFEFEF" } };
     labelCell.border = borderAll();
 
-    const text = options.map(o => `${checked.includes(o) ? "レ" : "　"} ${o}`).join("　　") +
+    const text = options.map(o => `${checked.includes(o) ? "☑" : "☐"} ${o}`).join("　　") +
       (checked.includes("その他") && otherText ? `　（${otherText}）` : "");
 
     ws.mergeCells(`C${startRow}:K${startRow}`);

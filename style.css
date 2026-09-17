@@ -172,6 +172,12 @@ textarea { resize: vertical; }
   align-items: center;
   gap: 6px;
 }
+.photo-hint {
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
 .photo-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
