@@ -1,36 +1,102 @@
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "tohoku-kizai-proposals-v1";
   const SITE_NAME = "東北機材センター";
+  const PIN_CODE = "2101";
+  const PIN_KEY = "kourituka-pin-ok";
+  const PROPOSALS_COLLECTION = "proposals";
+  const MAX_ENTRY_BYTES = 900000; // soft limit, keep well under Firestore's 1MiB/doc
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCz8cJt_34gelPORfIEQKkMBlW_uRE8Mqo",
+    authDomain: "kourituka-27228.firebaseapp.com",
+    projectId: "kourituka-27228",
+    storageBucket: "kourituka-27228.firebasestorage.app",
+    messagingSenderId: "952678388108",
+    appId: "1:952678388108:web:3ec838770a37ff6e6f06a9",
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
   /** @type {Array<Object>} */
-  let entries = loadEntries();
+  let entries = [];
   let currentPhotos = []; // [{id, dataUrl, caption}]
   let editingPhotoId = null;
 
-  // ---------- storage ----------
-  function loadEntries() {
+  // ---------- shared storage (Firestore) ----------
+  function subscribeToEntries() {
+    db.collection(PROPOSALS_COLLECTION).onSnapshot(
+      snapshot => {
+        entries = snapshot.docs.map(doc => doc.data());
+        if (document.getElementById("view-list").classList.contains("active")) {
+          renderList();
+        }
+      },
+      err => {
+        console.error(err);
+        showToast("データの取得に失敗しました。通信環境を確認してください。");
+      }
+    );
+  }
+
+  async function saveEntry(data) {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
+      await db.collection(PROPOSALS_COLLECTION).doc(data.id).set(data);
     } catch (e) {
-      console.error("読み込みに失敗しました", e);
-      return [];
+      console.error(e);
+      showToast("送信に失敗しました。通信環境を確認してください。");
+      throw e;
     }
   }
 
-  function saveEntries() {
+  async function deleteEntry(id) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      await db.collection(PROPOSALS_COLLECTION).doc(id).delete();
     } catch (e) {
-      console.error("保存に失敗しました", e);
-      showToast("提出に失敗しました（容量オーバーの可能性があります）");
+      console.error(e);
+      showToast("削除に失敗しました。通信環境を確認してください。");
+      throw e;
     }
+  }
+
+  function entrySizeBytes(data) {
+    return new Blob([JSON.stringify(data)]).size;
   }
 
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  // ---------- access code gate ----------
+  function initPinGate() {
+    const gate = document.getElementById("pin-gate");
+    const input = document.getElementById("pin-input");
+    const submitBtn = document.getElementById("pin-submit");
+    const errorEl = document.getElementById("pin-error");
+
+    if (localStorage.getItem(PIN_KEY) === "1") {
+      gate.hidden = true;
+      startApp();
+      return;
+    }
+
+    function tryUnlock() {
+      if (input.value.trim() === PIN_CODE) {
+        localStorage.setItem(PIN_KEY, "1");
+        gate.hidden = true;
+        startApp();
+      } else {
+        errorEl.hidden = false;
+        input.value = "";
+        input.focus();
+      }
+    }
+
+    submitBtn.addEventListener("click", tryUnlock);
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") tryUnlock();
+    });
+    input.focus();
   }
 
   // ---------- toast ----------
@@ -80,6 +146,19 @@
   }
 
   // ---------- photos ----------
+  function currentPhotosBytes() {
+    return currentPhotos.reduce((sum, p) => sum + p.dataUrl.length, 0);
+  }
+
+  function addPhotoIfRoom(dataUrl, caption) {
+    if (currentPhotosBytes() + dataUrl.length > MAX_ENTRY_BYTES) {
+      showToast("写真の合計サイズが大きすぎます。写真を削除するか枚数を減らしてください。");
+      return false;
+    }
+    currentPhotos.push({ id: uid(), dataUrl, caption: caption || "" });
+    return true;
+  }
+
   function initPhotoInput() {
     const input = document.getElementById("photo-input");
     input.addEventListener("change", async (e) => {
@@ -87,7 +166,7 @@
       for (const file of files) {
         try {
           const dataUrl = await fileToCompressedDataUrl(file);
-          currentPhotos.push({ id: uid(), dataUrl, caption: "" });
+          addPhotoIfRoom(dataUrl);
         } catch (err) {
           console.error(err);
           showToast("写真の読み込みに失敗しました");
@@ -98,7 +177,7 @@
     });
   }
 
-  function fileToCompressedDataUrl(file, maxDim = 1600, quality = 0.82) {
+  function fileToCompressedDataUrl(file, maxDim = 1280, quality = 0.75) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onerror = () => reject(reader.error);
@@ -326,7 +405,7 @@
   function capturePhotoFromCamera() {
     const video = document.getElementById("camera-video");
     const canvas = document.getElementById("camera-canvas");
-    const maxDim = 1600;
+    const maxDim = 1280;
     let w = video.videoWidth;
     let h = video.videoHeight;
     if (!w || !h) {
@@ -341,11 +420,12 @@
     canvas.width = w;
     canvas.height = h;
     canvas.getContext("2d").drawImage(video, 0, 0, w, h);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-    currentPhotos.push({ id: uid(), dataUrl, caption: "" });
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+    if (addPhotoIfRoom(dataUrl)) {
+      showToast("写真を追加しました");
+    }
     renderPhotoGrid();
     closeCameraModal();
-    showToast("写真を追加しました");
   }
 
   function escapeHtml(s) {
@@ -416,30 +496,39 @@
     renderPhotoGrid();
   }
 
-  function saveEntry(data) {
-    const idx = entries.findIndex(en => en.id === data.id);
-    if (idx >= 0) entries[idx] = data;
-    else entries.push(data);
-    saveEntries();
-  }
-
   function initForm() {
-    document.getElementById("proposal-form").addEventListener("submit", (e) => {
+    document.getElementById("proposal-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const data = collectFormData("submitted");
       if (!data.month || !data.group) {
         showToast("対象月と報告グループを選択してください");
         return;
       }
-      saveEntry(data);
+      if (entrySizeBytes(data) > MAX_ENTRY_BYTES) {
+        showToast("写真の合計サイズが大きすぎます。写真を減らしてください。");
+        return;
+      }
+      try {
+        await saveEntry(data);
+      } catch (e) {
+        return;
+      }
       showToast("提出しました");
       resetForm();
       switchView("list");
     });
 
-    document.getElementById("btn-draft").addEventListener("click", () => {
+    document.getElementById("btn-draft").addEventListener("click", async () => {
       const data = collectFormData("draft");
-      saveEntry(data);
+      if (entrySizeBytes(data) > MAX_ENTRY_BYTES) {
+        showToast("写真の合計サイズが大きすぎます。写真を減らしてください。");
+        return;
+      }
+      try {
+        await saveEntry(data);
+      } catch (e) {
+        return;
+      }
       showToast("一時保存しました（あとで一覧から再開できます）");
       resetForm();
       switchView("list");
@@ -491,11 +580,13 @@
       });
       card.querySelector('[data-act="print"]').addEventListener("click", () => printEntry(entry));
       card.querySelector('[data-act="excel"]').addEventListener("click", () => exportEntriesToExcel([entry], `${entry.month || "未選択"}月分_${entry.group || "未選択"}`));
-      card.querySelector('[data-act="delete"]').addEventListener("click", () => {
+      card.querySelector('[data-act="delete"]').addEventListener("click", async () => {
         if (confirm("この提出内容を削除しますか？")) {
-          entries = entries.filter(en => en.id !== entry.id);
-          saveEntries();
-          renderList();
+          try {
+            await deleteEntry(entry.id);
+          } catch (e) {
+            // error toast already shown by deleteEntry
+          }
         }
       });
       listEl.appendChild(card);
@@ -720,16 +811,21 @@
   }
 
   // ---------- init ----------
-  function init() {
-    initTabs();
-    initMonthSelect();
+  function startApp() {
     initOtherToggles();
     initPhotoInput();
     initPhotoModal();
     initCameraCapture();
     initForm();
     initListToolbar();
+    subscribeToEntries();
     renderList();
+  }
+
+  function init() {
+    initTabs();
+    initMonthSelect();
+    initPinGate();
   }
 
   document.addEventListener("DOMContentLoaded", init);

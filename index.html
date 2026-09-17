@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>東北機材センター 業務効率化提案</title>
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=10">
 
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png">
@@ -17,6 +17,17 @@
 <meta name="apple-mobile-web-app-title" content="効率化">
 </head>
 <body>
+
+<!-- アクセスコード入力画面 -->
+<div id="pin-gate" class="pin-gate">
+  <div class="pin-gate-box">
+    <div class="pin-gate-icon">🔒</div>
+    <h2>アクセスコードを入力してください</h2>
+    <input type="password" id="pin-input" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4桁のコード" autocomplete="off">
+    <button type="button" id="pin-submit" class="btn btn-primary">開く</button>
+    <p id="pin-error" class="pin-error" hidden>コードが違います</p>
+  </div>
+</div>
 
 <header class="app-header">
   <h1>東北機材センター 業務効率化提案</h1>
@@ -196,6 +207,8 @@
 
 <script src="lib/exceljs.min.js"></script>
 <script src="lib/FileSaver.min.js"></script>
-<script src="app.js?v=9"></script>
+<script src="lib/firebase-app-compat.js"></script>
+<script src="lib/firebase-firestore-compat.js"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>

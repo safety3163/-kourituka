@@ -14,6 +14,46 @@
 
 * { box-sizing: border-box; }
 
+.pin-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: var(--color-primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.pin-gate[hidden] { display: none; }
+.pin-gate-box {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.pin-gate-icon { font-size: 2.5rem; margin-bottom: 8px; }
+.pin-gate-box h2 {
+  font-size: 1.05rem;
+  margin: 0 0 20px;
+  color: var(--color-primary-dark);
+}
+.pin-gate-box input {
+  text-align: center;
+  font-size: 1.5rem;
+  letter-spacing: 0.4em;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+.pin-gate-box .btn { width: 100%; }
+.pin-error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  margin: 12px 0 0;
+}
+
 body {
   margin: 0;
   background: var(--color-bg);
