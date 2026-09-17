@@ -172,13 +172,14 @@
 </div>
 
 <!-- アプリ内カメラ撮影モーダル -->
-<div id="camera-modal" class="modal" hidden>
+<div id="camera-modal" class="modal camera-fullscreen" hidden>
   <div class="modal-content camera-modal-content">
     <button class="modal-close" id="camera-modal-close">&times;</button>
     <video id="camera-video" autoplay playsinline muted></video>
     <canvas id="camera-canvas" hidden></canvas>
-    <div class="modal-actions">
-      <button id="camera-shutter" class="btn btn-primary">撮影する</button>
+    <div class="camera-toolbar">
+      <button id="camera-switch" class="btn btn-ghost" hidden>カメラ切替</button>
+      <button id="camera-shutter" class="btn btn-primary camera-shutter-btn">撮影する</button>
     </div>
   </div>
 </div>

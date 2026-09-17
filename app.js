@@ -186,6 +186,8 @@
   // ---------- in-app camera capture (for Windows PC/tablets where the file
   // picker has no camera shortcut) ----------
   let cameraStream = null;
+  let cameraDevices = [];
+  let cameraDeviceIndex = 0;
 
   function initCameraCapture() {
     const btn = document.getElementById("btn-camera-capture");
@@ -193,26 +195,67 @@
       btn.hidden = true;
       return;
     }
-    btn.addEventListener("click", openCameraModal);
+    btn.addEventListener("click", () => openCameraModal());
     document.getElementById("camera-modal-close").addEventListener("click", closeCameraModal);
     document.getElementById("camera-shutter").addEventListener("click", capturePhotoFromCamera);
+    document.getElementById("camera-switch").addEventListener("click", switchCamera);
+  }
+
+  async function startStream(constraints) {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+    }
+    cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+    document.getElementById("camera-video").srcObject = cameraStream;
   }
 
   async function openCameraModal() {
     try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+      await startStream({ video: { facingMode: { exact: "environment" } }, audio: false });
     } catch (e) {
       try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        await startStream({ video: { facingMode: "environment" }, audio: false });
       } catch (e2) {
-        console.error(e2);
-        showToast("カメラを起動できませんでした。カメラの使用を許可してください。");
-        return;
+        try {
+          await startStream({ video: true, audio: false });
+        } catch (e3) {
+          console.error(e3);
+          showToast("カメラを起動できませんでした。カメラの使用を許可してください。");
+          return;
+        }
       }
     }
-    const video = document.getElementById("camera-video");
-    video.srcObject = cameraStream;
     document.getElementById("camera-modal").hidden = false;
+    refreshCameraDeviceList();
+  }
+
+  async function refreshCameraDeviceList() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      cameraDevices = devices.filter(d => d.kind === "videoinput");
+      const switchBtn = document.getElementById("camera-switch");
+      switchBtn.hidden = cameraDevices.length < 2;
+      if (cameraStream) {
+        const currentId = cameraStream.getVideoTracks()[0]?.getSettings().deviceId;
+        const idx = cameraDevices.findIndex(d => d.deviceId === currentId);
+        if (idx >= 0) cameraDeviceIndex = idx;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function switchCamera() {
+    if (cameraDevices.length < 2) return;
+    cameraDeviceIndex = (cameraDeviceIndex + 1) % cameraDevices.length;
+    const nextId = cameraDevices[cameraDeviceIndex].deviceId;
+    try {
+      await startStream({ video: { deviceId: { exact: nextId } }, audio: false });
+    } catch (e) {
+      console.error(e);
+      showToast("カメラを切り替えられませんでした");
+    }
   }
 
   function closeCameraModal() {
