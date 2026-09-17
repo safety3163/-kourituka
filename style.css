@@ -231,6 +231,26 @@ textarea { resize: vertical; }
   gap: 10px;
   margin-top: 20px;
 }
+.form-actions + .form-actions {
+  margin-top: 10px;
+}
+.draft-hint {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+  line-height: 1.5;
+}
+.status-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 6px;
+  background: #fff3cd;
+  color: #8a6300;
+  vertical-align: middle;
+}
 
 .btn {
   border: none;

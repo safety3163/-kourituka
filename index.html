@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>東北機材センター 業務効率化提案</title>
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="style.css?v=9">
 
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png">
@@ -22,7 +22,7 @@
   <h1>東北機材センター 業務効率化提案</h1>
   <nav class="tabs">
     <button class="tab-btn active" data-view="form">入力</button>
-    <button class="tab-btn" data-view="list">提出済み一覧</button>
+    <button class="tab-btn" data-view="list">一覧</button>
   </nav>
 </header>
 
@@ -140,18 +140,22 @@
 
       <div class="form-actions">
         <button type="button" id="btn-clear" class="btn btn-ghost">クリア</button>
+        <button type="button" id="btn-draft" class="btn btn-secondary">一時保存</button>
+      </div>
+      <div class="form-actions">
         <button type="submit" id="btn-save" class="btn btn-primary">提出する</button>
       </div>
+      <p class="draft-hint">※ 「一時保存」は下書きとして保存し、あとで「一覧」から編集を再開できます（写真を後から追加する場合などにお使いください）。「提出する」を押すと提出済みになります。</p>
     </form>
   </section>
 
-  <!-- ===================== 提出済み一覧 ===================== -->
+  <!-- ===================== 一覧 ===================== -->
   <section id="view-list" class="view">
     <div class="list-toolbar">
       <button id="btn-export-all" class="btn btn-secondary">全件をExcel出力</button>
     </div>
     <div id="entry-list" class="entry-list"></div>
-    <p id="empty-msg" class="empty-msg" hidden>提出済みの内容はまだありません。</p>
+    <p id="empty-msg" class="empty-msg" hidden>保存された内容はまだありません。</p>
   </section>
 </main>
 
@@ -192,6 +196,6 @@
 
 <script src="lib/exceljs.min.js"></script>
 <script src="lib/FileSaver.min.js"></script>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>

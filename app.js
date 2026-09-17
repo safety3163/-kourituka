@@ -357,10 +357,11 @@
     return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(i => i.value);
   }
 
-  function collectFormData() {
+  function collectFormData(status) {
     return {
       id: document.getElementById("entry-id").value || uid(),
       site: SITE_NAME,
+      status: status || "submitted",
       term: document.getElementById("term").value,
       month: document.getElementById("month").value,
       group: document.getElementById("group").value,
@@ -415,19 +416,31 @@
     renderPhotoGrid();
   }
 
+  function saveEntry(data) {
+    const idx = entries.findIndex(en => en.id === data.id);
+    if (idx >= 0) entries[idx] = data;
+    else entries.push(data);
+    saveEntries();
+  }
+
   function initForm() {
     document.getElementById("proposal-form").addEventListener("submit", (e) => {
       e.preventDefault();
-      const data = collectFormData();
+      const data = collectFormData("submitted");
       if (!data.month || !data.group) {
         showToast("対象月と報告グループを選択してください");
         return;
       }
-      const idx = entries.findIndex(en => en.id === data.id);
-      if (idx >= 0) entries[idx] = data;
-      else entries.push(data);
-      saveEntries();
+      saveEntry(data);
       showToast("提出しました");
+      resetForm();
+      switchView("list");
+    });
+
+    document.getElementById("btn-draft").addEventListener("click", () => {
+      const data = collectFormData("draft");
+      saveEntry(data);
+      showToast("一時保存しました（あとで一覧から再開できます）");
       resetForm();
       switchView("list");
     });
@@ -458,11 +471,15 @@
       card.className = "entry-card";
       const dateStr = new Date(entry.updatedAt).toLocaleString("ja-JP");
       const termLabel = entry.term ? `${entry.term}期　` : "";
+      const monthLabel = entry.month ? MONTH_LABEL(entry.month) : "(月未選択)";
+      const groupLabel = entry.group ? escapeHtml(entry.group) : "(グループ未選択)";
+      const isDraft = entry.status === "draft";
+      const badge = isDraft ? '<span class="status-badge">下書き</span>' : "";
       card.innerHTML = `
-        <div class="entry-title">${termLabel}${MONTH_LABEL(entry.month)}　${escapeHtml(entry.group)}</div>
+        <div class="entry-title">${termLabel}${monthLabel}　${groupLabel}${badge}</div>
         <div class="entry-sub">更新: ${dateStr}　写真${(entry.photos || []).length}枚</div>
         <div class="entry-buttons">
-          <button data-act="edit">編集</button>
+          <button data-act="edit">${isDraft ? "再開" : "編集"}</button>
           <button data-act="print">印刷</button>
           <button data-act="excel">Excel出力</button>
           <button data-act="delete" class="danger">削除</button>
@@ -473,7 +490,7 @@
         switchView("form");
       });
       card.querySelector('[data-act="print"]').addEventListener("click", () => printEntry(entry));
-      card.querySelector('[data-act="excel"]').addEventListener("click", () => exportEntriesToExcel([entry], `${entry.month}月分_${entry.group}`));
+      card.querySelector('[data-act="excel"]').addEventListener("click", () => exportEntriesToExcel([entry], `${entry.month || "未選択"}月分_${entry.group || "未選択"}`));
       card.querySelector('[data-act="delete"]').addEventListener("click", () => {
         if (confirm("この提出内容を削除しますか？")) {
           entries = entries.filter(en => en.id !== entry.id);
@@ -487,11 +504,12 @@
 
   function initListToolbar() {
     document.getElementById("btn-export-all").addEventListener("click", () => {
-      if (entries.length === 0) {
-        showToast("提出済みの内容がありません");
+      const submitted = entries.filter(en => en.status !== "draft");
+      if (submitted.length === 0) {
+        showToast("提出済みの内容がありません（下書きは除外されます）");
         return;
       }
-      exportEntriesToExcel(entries, "東北機材センター_業務効率化提案_全件");
+      exportEntriesToExcel(submitted, "東北機材センター_業務効率化提案_全件");
     });
   }
 
