@@ -247,15 +247,26 @@
         const idx = cameraDevices.findIndex(d => d.deviceId === currentId);
         if (idx >= 0) cameraDeviceIndex = idx;
       }
+      updateCameraDeviceInfo();
     } catch (e) {
       console.error(e);
     }
   }
 
+  function updateCameraDeviceInfo() {
+    const info = document.getElementById("camera-device-info");
+    const track = cameraStream ? cameraStream.getVideoTracks()[0] : null;
+    const settings = track ? track.getSettings() : {};
+    const label = track ? track.label : "";
+    const idxLabel = cameraDevices.length ? `${cameraDeviceIndex + 1}/${cameraDevices.length}台` : "";
+    const facing = settings.facingMode ? `facingMode: ${settings.facingMode}` : "facingMode: 不明";
+    info.textContent = `検出カメラ ${idxLabel}　${facing}${label ? "　" + label : ""}`;
+  }
+
   async function switchCamera() {
     await refreshCameraDeviceList();
     if (cameraDevices.length < 2) {
-      showToast("切り替え可能なカメラが見つかりませんでした");
+      showToast("この端末ではカメラが1台しか検出されませんでした");
       return;
     }
     const startIndex = cameraDeviceIndex;
@@ -268,6 +279,7 @@
       try {
         await startStream({ video: { deviceId: { exact: nextId } }, audio: false });
         cameraDeviceIndex = tryIndex;
+        updateCameraDeviceInfo();
         const newTrack = cameraStream.getVideoTracks()[0];
         const newFacing = newTrack.getSettings().facingMode;
         // if facingMode is reported and unchanged, this was likely the same
